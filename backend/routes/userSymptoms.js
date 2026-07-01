@@ -8,7 +8,7 @@ router.use(auth);
 router.get('/', async (req, res) => {
   try {
     const [rows] = await db.query(
-      'SELECT name, use_count FROM user_symptoms WHERE user_id = ? ORDER BY use_count DESC LIMIT 30',
+      'SELECT name, use_count, emoji FROM user_symptoms WHERE user_id = ? ORDER BY use_count DESC LIMIT 30',
       [req.userId]
     );
     res.json(rows);
