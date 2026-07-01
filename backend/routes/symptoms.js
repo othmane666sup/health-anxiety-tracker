@@ -38,16 +38,16 @@ router.get('/date/:date', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { day_id, symptom_type, intensity, hour_of_day, notes, emoji } = req.body;
+  const { day_id, symptom_type, intensity, hour_of_day, notes } = req.body;
   try {
     const [result] = await db.query(
       'INSERT INTO symptoms (day_id, symptom_type, intensity, hour_of_day, notes) VALUES (?, ?, ?, ?, ?)',
       [day_id, symptom_type, intensity, hour_of_day, notes]
     );
     await db.query(
-      `INSERT INTO user_symptoms (user_id, name, emoji) VALUES (?, ?, ?)
-       ON DUPLICATE KEY UPDATE use_count = use_count + 1, emoji = COALESCE(VALUES(emoji), emoji)`,
-      [req.userId, symptom_type, emoji || null]
+      `INSERT INTO user_symptoms (user_id, name) VALUES (?, ?)
+       ON DUPLICATE KEY UPDATE use_count = use_count + 1`,
+      [req.userId, symptom_type]
     );
     const [row] = await db.query('SELECT * FROM symptoms WHERE id = ?', [result.insertId]);
     res.status(201).json(row[0]);

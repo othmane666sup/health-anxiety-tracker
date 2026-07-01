@@ -53,19 +53,10 @@ function SleepPicker({ value, onChange }) {
   );
 }
 
-const EMOJI_OPTIONS = [
-  '🤕','🤒','🤧','😴','🤢','🥵','🥶','😣','😖','💊',
-  '🫀','🧠','🦴','💪','👁️','😰','😱','😟','😔','😢',
-  '😭','🥺','😬','😨','🌪️','⚡','🔥','💭','💔','🌡️',
-  '🩹','💤','🛏️','🫠','🤯','😤','🫃','😵','🧊','💧',
-];
-
 /* Symptom modal */
 function SymptomModal({ hour, onClose, onSave, userSymptoms = [] }) {
   const [type, setType]           = useState('');
   const [custom, setCustom]       = useState('');
-  const [emoji, setEmoji]         = useState('');
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [intensity, setIntensity] = useState(3);
   const [selHour, setSelHour]     = useState(hour ?? new Date().getHours());
   const [notes, setNotes]         = useState('');
@@ -73,13 +64,6 @@ function SymptomModal({ hour, onClose, onSave, userSymptoms = [] }) {
 
   const presetLabels = new Set(SYMPTOM_PRESETS.map(s => s.label));
   const mySymptoms   = userSymptoms.filter(s => !presetLabels.has(s.name));
-
-  const defaultEmoji = type === '__custom__'
-    ? '●'
-    : (SYMPTOM_PRESETS.find(p => p.label === type)?.icon
-      || userSymptoms.find(u => u.name === type)?.emoji
-      || '●');
-  const displayEmoji = emoji || defaultEmoji;
 
   const finalType = type === '__custom__' ? custom.trim() : type;
   const canSave   = finalType.length > 0;
@@ -162,47 +146,6 @@ function SymptomModal({ hour, onClose, onSave, userSymptoms = [] }) {
               <input className="input mt-2" placeholder="صف عرضك..."
                 value={custom} onChange={e => setCustom(e.target.value)} autoFocus />
             )}
-
-            {/* Emoji picker */}
-            {(type && type !== '__custom__') || (type === '__custom__' && custom.trim()) ? (
-              <div className="mt-3">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setShowEmojiPicker(v => !v)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all"
-                    style={{
-                      background: showEmojiPicker ? 'rgba(101,146,135,0.1)' : '#D8EBCF',
-                      border: showEmojiPicker ? '1.5px solid rgba(101,146,135,0.2)' : '1.5px solid transparent',
-                      color: '#659287',
-                    }}>
-                    <span className="text-lg leading-none">{displayEmoji}</span>
-                    <span className="text-xs font-semibold" style={{ color: '#78716C' }}>
-                      {emoji ? 'تغيير الإيموجي' : 'اختر إيموجي'}
-                    </span>
-                  </button>
-                  {emoji && (
-                    <button onClick={() => setEmoji('')}
-                      className="text-xs px-2 py-1 rounded-lg"
-                      style={{ color: '#A8A29E', background: '#D8EBCF' }}>
-                      إعادة
-                    </button>
-                  )}
-                </div>
-                {showEmojiPicker && (
-                  <div className="mt-2 p-3 rounded-xl" style={{ background: '#F0F7EC', border: '1px solid rgba(101,146,135,0.12)' }}>
-                    <div className="grid grid-cols-8 gap-1">
-                      {EMOJI_OPTIONS.map(e => (
-                        <button key={e} onClick={() => { setEmoji(e); setShowEmojiPicker(false); }}
-                          className="text-xl leading-none p-1.5 rounded-lg transition-all hover:scale-110"
-                          style={{ background: emoji === e ? 'rgba(101,146,135,0.15)' : 'transparent' }}>
-                          {e}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : null}
           </div>
 
           <div>
@@ -234,7 +177,7 @@ function SymptomModal({ hour, onClose, onSave, userSymptoms = [] }) {
         </div>
 
         <div className="p-4" style={{ borderTop: '1px solid rgba(0,0,0,0.05)' }}>
-          <button onClick={() => canSave && onSave({ symptom_type: finalType, intensity, hour_of_day: selHour, notes, emoji: emoji || null })}
+          <button onClick={() => canSave && onSave({ symptom_type: finalType, intensity, hour_of_day: selHour, notes })}
             disabled={!canSave}
             className="btn-primary w-full disabled:opacity-30 disabled:cursor-not-allowed" style={{ gap: '0.5rem' }}>
             <Check className="w-4 h-4" /> حفظ العرض
@@ -246,7 +189,7 @@ function SymptomModal({ hour, onClose, onSave, userSymptoms = [] }) {
   );
 }
 
-function TimelineRow({ hour, symptoms, onAddClick, isLast, getIcon }) {
+function TimelineRow({ hour, symptoms, onAddClick, isLast }) {
   const isNow   = new Date().getHours() === hour;
   const hasItems = symptoms.length > 0;
 
@@ -272,7 +215,7 @@ function TimelineRow({ hour, symptoms, onAddClick, isLast, getIcon }) {
           {symptoms.map(s => (
             <span key={s.id} className="badge text-[11px]"
               style={{ background: INTENSITY_COLORS[s.intensity] + '1A', color: INTENSITY_COLORS[s.intensity] }}>
-              {getIcon(s.symptom_type)} {s.symptom_type}
+              {SYMPTOM_PRESETS.find(p => p.label === s.symptom_type)?.icon || '●'} {s.symptom_type}
             </span>
           ))}
           <button onClick={() => onAddClick(hour)}
@@ -291,12 +234,13 @@ function TimelineRow({ hour, symptoms, onAddClick, isLast, getIcon }) {
   );
 }
 
-function SymptomItem({ symptom, onDelete, getIcon }) {
-  const color = INTENSITY_COLORS[symptom.intensity];
+function SymptomItem({ symptom, onDelete }) {
+  const preset = SYMPTOM_PRESETS.find(p => p.label === symptom.symptom_type);
+  const color  = INTENSITY_COLORS[symptom.intensity];
   return (
     <div className="flex items-center gap-3 px-4 py-3 rounded-xl"
       style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-      <span className="text-lg leading-none">{getIcon(symptom.symptom_type)}</span>
+      <span className="text-lg leading-none">{preset?.icon || '●'}</span>
       <div className="flex-1 min-w-0">
         <p className="font-bold text-sm" style={{ color: '#1C1917' }}>{symptom.symptom_type}</p>
         <p className="text-xs mt-0.5" style={{ color: '#A8A29E' }}>{formatHour(symptom.hour_of_day)}</p>
@@ -370,18 +314,14 @@ export default function DailyLog() {
     finally { setSaving(false); }
   };
 
-  const emojiMap = Object.fromEntries(userSymptoms.map(s => [s.name, s.emoji]));
-  const getIcon = (type) =>
-    emojiMap[type] || SYMPTOM_PRESETS.find(p => p.label === type)?.icon || '●';
-
-  const handleAddSymptom = async ({ symptom_type, intensity, hour_of_day, notes, emoji }) => {
+  const handleAddSymptom = async ({ symptom_type, intensity, hour_of_day, notes }) => {
     let id = dayData?.id;
     if (!id) {
       const day = await daysApi.save({ date, ...form });
       setDayData(day);
       id = day.id;
     }
-    const s = await symptomsApi.add({ day_id: id, symptom_type, intensity, hour_of_day, notes, emoji });
+    const s = await symptomsApi.add({ day_id: id, symptom_type, intensity, hour_of_day, notes });
     setSymptoms(prev => [...prev, s]);
     userSymptomsApi.getAll().then(setUserSymptoms).catch(() => {});
     setModalHour(null);
@@ -532,7 +472,7 @@ export default function DailyLog() {
         <div className="timeline-line">
           {displayHours.map((hour, idx) => (
             <TimelineRow key={hour} hour={hour} symptoms={symptomsByHour[hour] || []}
-              onAddClick={setModalHour} isLast={idx === displayHours.length - 1} getIcon={getIcon} />
+              onAddClick={setModalHour} isLast={idx === displayHours.length - 1} />
           ))}
         </div>
 
@@ -548,7 +488,7 @@ export default function DailyLog() {
           <p className="font-extrabold mb-3" style={{ color: '#1C1917' }}>جميع الأعراض</p>
           <div className="space-y-2">
             {[...symptoms].sort((a, b) => a.hour_of_day - b.hour_of_day).map(s => (
-              <SymptomItem key={s.id} symptom={s} onDelete={handleDeleteSymptom} getIcon={getIcon} />
+              <SymptomItem key={s.id} symptom={s} onDelete={handleDeleteSymptom} />
             ))}
           </div>
         </div>
