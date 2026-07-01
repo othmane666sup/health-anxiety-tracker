@@ -1,13 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const auth = require('../middleware/auth');
 
-// GET symptoms for a day_id
+router.use(auth);
+
 router.get('/day/:dayId', async (req, res) => {
   try {
     const [rows] = await db.query(
-      'SELECT * FROM symptoms WHERE day_id = ? ORDER BY hour_of_day ASC, created_at ASC',
-      [req.params.dayId]
+      `SELECT s.* FROM symptoms s
+       JOIN days d ON s.day_id = d.id
+       WHERE s.day_id = ? AND d.user_id = ?
+       ORDER BY s.hour_of_day ASC, s.created_at ASC`,
+      [req.params.dayId, req.userId]
     );
     res.json(rows);
   } catch (err) {
@@ -15,10 +20,12 @@ router.get('/day/:dayId', async (req, res) => {
   }
 });
 
-// GET symptoms by date
 router.get('/date/:date', async (req, res) => {
   try {
-    const [days] = await db.query('SELECT id FROM days WHERE date = ?', [req.params.date]);
+    const [days] = await db.query(
+      'SELECT id FROM days WHERE date = ? AND user_id = ?',
+      [req.params.date, req.userId]
+    );
     if (days.length === 0) return res.json([]);
     const [rows] = await db.query(
       'SELECT * FROM symptoms WHERE day_id = ? ORDER BY hour_of_day ASC',
@@ -30,7 +37,6 @@ router.get('/date/:date', async (req, res) => {
   }
 });
 
-// POST add symptom
 router.post('/', async (req, res) => {
   const { day_id, symptom_type, intensity, hour_of_day, notes } = req.body;
   try {
@@ -45,7 +51,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT update symptom
 router.put('/:id', async (req, res) => {
   const { symptom_type, intensity, hour_of_day, notes } = req.body;
   try {
@@ -60,7 +65,6 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE symptom
 router.delete('/:id', async (req, res) => {
   try {
     await db.query('DELETE FROM symptoms WHERE id = ?', [req.params.id]);

@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, CalendarDays, BarChart3, Brain } from 'lucide-react';
+import { LayoutDashboard, BookOpen, CalendarDays, BarChart3, Brain, LogOut } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const links = [
   { to: '/', icon: LayoutDashboard, label: 'الرئيسية', end: true },
@@ -9,6 +10,7 @@ const links = [
 ];
 
 export default function Navbar() {
+  const { user, logout } = useAuth();
   return (
     <nav
       className="sticky top-0 z-50"
@@ -47,6 +49,14 @@ export default function Navbar() {
             </NavLink>
           ))}
         </div>
+        <button
+          onClick={logout}
+          title={user?.name}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium hover:bg-black/5 transition-all"
+          style={{ color: '#78716C' }}
+        >
+          <LogOut className="w-4 h-4" />
+        </button>
       </div>
     </nav>
   );

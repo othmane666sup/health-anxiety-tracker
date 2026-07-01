@@ -1,10 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const auth = require('../middleware/auth');
+
+router.use(auth);
 
 router.get('/date/:date', async (req, res) => {
   try {
-    const [days] = await db.query('SELECT id FROM days WHERE date = ?', [req.params.date]);
+    const [days] = await db.query(
+      'SELECT id FROM days WHERE date = ? AND user_id = ?',
+      [req.params.date, req.userId]
+    );
     if (days.length === 0) return res.json([]);
     const [rows] = await db.query(
       'SELECT * FROM time_blocks WHERE day_id = ? ORDER BY hour ASC',
