@@ -60,10 +60,9 @@ function SymptomModal({ hour, onClose, onSave, userSymptoms = [] }) {
   const [intensity, setIntensity] = useState(3);
   const [selHour, setSelHour]     = useState(hour ?? new Date().getHours());
   const [notes, setNotes]         = useState('');
-  const [tab, setTab]             = useState('mine');
-
   const presetLabels = new Set(SYMPTOM_PRESETS.map(s => s.label));
   const mySymptoms   = userSymptoms.filter(s => !presetLabels.has(s.name));
+  const [tab, setTab]             = useState(mySymptoms.length > 0 ? 'mine' : 'physical');
 
   const finalType = type === '__custom__' ? custom.trim() : type;
   const canSave   = finalType.length > 0;
