@@ -1,0 +1,35 @@
+CREATE DATABASE IF NOT EXISTS health_tracker;
+USE health_tracker;
+
+CREATE TABLE IF NOT EXISTS days (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  date DATE NOT NULL UNIQUE,
+  mood_rating INT NOT NULL DEFAULT 5,
+  anxiety_level INT NOT NULL DEFAULT 5,
+  sleep_hours DECIMAL(3,1) DEFAULT NULL,
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS symptoms (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  day_id INT NOT NULL,
+  symptom_type VARCHAR(100) NOT NULL,
+  intensity INT NOT NULL DEFAULT 3,
+  hour_of_day INT NOT NULL DEFAULT 12,
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (day_id) REFERENCES days(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS time_blocks (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  day_id INT NOT NULL,
+  hour INT NOT NULL,
+  activity VARCHAR(200),
+  quality ENUM('great','good','neutral','bad','terrible') DEFAULT 'neutral',
+  notes TEXT,
+  FOREIGN KEY (day_id) REFERENCES days(id) ON DELETE CASCADE,
+  UNIQUE KEY unique_day_hour (day_id, hour)
+);
