@@ -68,11 +68,10 @@ function SymptomModal({ hour, onClose, onSave, userSymptoms = [] }) {
   const canSave   = finalType.length > 0;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto"
+    <div className="fixed inset-0 z-50 flex items-end justify-center px-4"
       style={{ background: 'rgba(0,0,0,0.35)' }}
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="flex min-h-full items-end justify-center px-4 pb-24 pt-16">
-      <div className="w-full max-w-sm overflow-hidden"
+      <div className="w-full max-w-sm mb-24 overflow-hidden"
         style={{ background: '#FFFFFF', borderRadius: '1.25rem', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
         <div className="flex items-center justify-between p-4" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
           <h3 className="font-extrabold" style={{ color: '#1C1917' }}>إضافة عرض</h3>
@@ -83,7 +82,7 @@ function SymptomModal({ hour, onClose, onSave, userSymptoms = [] }) {
           </button>
         </div>
 
-        <div className="p-4 space-y-4 max-h-[72vh] overflow-y-auto">
+        <div className="p-4 space-y-4 overflow-y-auto" style={{ maxHeight: '60vh' }}>
           <div>
             <label className="label flex items-center gap-1.5">
               <Clock className="w-3 h-3" style={{ color: '#659287' }} /> الوقت
@@ -182,7 +181,6 @@ function SymptomModal({ hour, onClose, onSave, userSymptoms = [] }) {
             <Check className="w-4 h-4" /> حفظ العرض
           </button>
         </div>
-      </div>
       </div>
     </div>
   );
