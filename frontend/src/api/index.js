@@ -48,6 +48,10 @@ export const statsApi = {
   getHourDistribution: (days = 30) => api.get(`/stats/hour-distribution?days=${days}`).then(r => r.data),
 };
 
+export const userSymptomsApi = {
+  getAll: () => api.get('/user-symptoms').then(r => r.data),
+};
+
 export const timeblocksApi = {
   getByDate: (date) => api.get(`/timeblocks/date/${date}`).then(r => r.data),
   save: (data) => api.post('/timeblocks', data).then(r => r.data),

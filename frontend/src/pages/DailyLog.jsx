@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { daysApi, symptomsApi } from '../api';
+import { daysApi, symptomsApi, userSymptomsApi } from '../api';
 import {
   MOOD_EMOJIS, ANXIETY_EMOJIS, MOOD_COLORS, ANXIETY_COLORS,
   SYMPTOM_PRESETS, INTENSITY_COLORS, formatHour, todayString, arDate,
@@ -54,13 +54,16 @@ function SleepPicker({ value, onChange }) {
 }
 
 /* Symptom modal */
-function SymptomModal({ hour, onClose, onSave }) {
+function SymptomModal({ hour, onClose, onSave, userSymptoms = [] }) {
   const [type, setType]           = useState('');
   const [custom, setCustom]       = useState('');
   const [intensity, setIntensity] = useState(3);
   const [selHour, setSelHour]     = useState(hour ?? new Date().getHours());
   const [notes, setNotes]         = useState('');
-  const [tab, setTab]             = useState('physical');
+  const [tab, setTab]             = useState('mine');
+
+  const presetLabels = new Set(SYMPTOM_PRESETS.map(s => s.label));
+  const mySymptoms   = userSymptoms.filter(s => !presetLabels.has(s.name));
 
   const finalType = type === '__custom__' ? custom.trim() : type;
   const canSave   = finalType.length > 0;
@@ -96,7 +99,11 @@ function SymptomModal({ hour, onClose, onSave }) {
           <div>
             <label className="label">العرض</label>
             <div className="flex gap-2 mb-3">
-              {[['physical', '🫀 جسدية'], ['mental', '🧠 نفسية']].map(([t, l]) => (
+              {[
+                ...(mySymptoms.length > 0 ? [['mine', '⭐ مستخدمة']] : []),
+                ['physical', '🫀 جسدية'],
+                ['mental', '🧠 نفسية'],
+              ].map(([t, l]) => (
                 <button key={t} onClick={() => setTab(t)}
                   className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
                   style={tab === t
@@ -107,7 +114,17 @@ function SymptomModal({ hour, onClose, onSave }) {
               ))}
             </div>
             <div className="grid grid-cols-2 gap-1.5">
-              {SYMPTOM_PRESETS.filter(s => s.category === tab).map(s => (
+              {tab === 'mine' && mySymptoms.map(s => (
+                <button key={s.name} onClick={() => { setType(s.name); setCustom(''); }}
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all text-right"
+                  style={type === s.name
+                    ? { background: 'rgba(101,146,135,0.08)', color: '#659287', border: '1.5px solid rgba(101,146,135,0.18)' }
+                    : { background: '#D8EBCF', color: '#78716C', border: '1.5px solid transparent' }}>
+                  <span className="text-base leading-none">●</span>
+                  <span className="truncate">{s.name}</span>
+                </button>
+              ))}
+              {tab !== 'mine' && SYMPTOM_PRESETS.filter(s => s.category === tab).map(s => (
                 <button key={s.label} onClick={() => { setType(s.label); setCustom(''); }}
                   className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all text-right"
                   style={type === s.label
@@ -254,6 +271,7 @@ export default function DailyLog() {
   const [saved, setSaved]               = useState(false);
   const [modalHour, setModalHour]       = useState(null);
   const [showAllHours, setShowAllHours] = useState(false);
+  const [userSymptoms, setUserSymptoms] = useState([]);
 
   const load = useCallback(async (d) => {
     try {
@@ -274,6 +292,7 @@ export default function DailyLog() {
   }, []);
 
   useEffect(() => { load(date); }, [date, load]);
+  useEffect(() => { userSymptomsApi.getAll().then(setUserSymptoms).catch(() => {}); }, []);
 
   const handleDateChange = (offset) => {
     const d = new Date(date + 'T12:00:00');
@@ -304,6 +323,7 @@ export default function DailyLog() {
     }
     const s = await symptomsApi.add({ day_id: id, symptom_type, intensity, hour_of_day, notes });
     setSymptoms(prev => [...prev, s]);
+    userSymptomsApi.getAll().then(setUserSymptoms).catch(() => {});
     setModalHour(null);
   };
 
@@ -475,7 +495,7 @@ export default function DailyLog() {
       )}
 
       {modalHour !== null && (
-        <SymptomModal hour={modalHour} onClose={() => setModalHour(null)} onSave={handleAddSymptom} />
+        <SymptomModal hour={modalHour} onClose={() => setModalHour(null)} onSave={handleAddSymptom} userSymptoms={userSymptoms} />
       )}
     </div>
   );

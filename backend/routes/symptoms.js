@@ -44,6 +44,11 @@ router.post('/', async (req, res) => {
       'INSERT INTO symptoms (day_id, symptom_type, intensity, hour_of_day, notes) VALUES (?, ?, ?, ?, ?)',
       [day_id, symptom_type, intensity, hour_of_day, notes]
     );
+    await db.query(
+      `INSERT INTO user_symptoms (user_id, name) VALUES (?, ?)
+       ON DUPLICATE KEY UPDATE use_count = use_count + 1`,
+      [req.userId, symptom_type]
+    );
     const [row] = await db.query('SELECT * FROM symptoms WHERE id = ?', [result.insertId]);
     res.status(201).json(row[0]);
   } catch (err) {

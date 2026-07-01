@@ -14,6 +14,7 @@ app.use('/api/days', require('./routes/days'));
 app.use('/api/symptoms', require('./routes/symptoms'));
 app.use('/api/stats', require('./routes/stats'));
 app.use('/api/timeblocks', require('./routes/timeblocks'));
+app.use('/api/user-symptoms', require('./routes/userSymptoms'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
